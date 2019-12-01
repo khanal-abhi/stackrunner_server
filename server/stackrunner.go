@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -48,6 +49,70 @@ func (ppr *Piper) Write(p []byte) (int, error) {
 type UnfoldedErrorLines struct {
 	CurrentSet []string
 	List       [][]string
+}
+
+// BuildError defines the structure for build errors
+type BuildError struct {
+	File    string   `json:"file"`
+	Line    int      `json:"line"`
+	Column  int      `json:"column"`
+	Details []string `json:"details"`
+	Extras  string   `json:"extras"`
+}
+
+// ParseErrorLine parses the error line into the error struct
+func ParseErrorLine(line string, eerr error) (*BuildError, error) {
+	if eerr != nil {
+		return nil, eerr
+	}
+	re, err := regexp.Compile("^.+\\[warn\\] (\\/.+):(\\d+):(\\d+)(: error:.*)")
+	if err != nil {
+		return nil, err
+	}
+	b := []byte(`
+	{	
+		"file": "$1",
+		"line": $2,
+		"column": $3,
+		"details": [],
+		"extras": "$4"
+	}
+	`)
+	data := re.ReplaceAll([]byte(line), b)
+	be := BuildError{}
+	err = json.Unmarshal(data, &be)
+	if len(strings.Trim(be.Extras, " ")) > 0 {
+		be.Extras = strings.Replace(be.Extras, ": error:", "", -1)
+		be.Extras = strings.Trim(be.Extras, " ")
+	}
+	return &be, err
+}
+
+// ParseUnfoldedErrorLines parses unfolded error lines to list of BuildErrors
+func ParseUnfoldedErrorLines(unfoldedErrorLines *UnfoldedErrorLines, eerr error) ([]BuildError, error) {
+	if eerr != nil {
+		return nil, eerr
+	}
+	bes := make([]BuildError, 0)
+	var err error = nil
+	for _, errset := range unfoldedErrorLines.List {
+		l := len(errset)
+		if l > 0 {
+			be, err := ParseErrorLine(errset[0], nil)
+			if err == nil {
+				for i, e := range errset {
+					if i > 0 {
+						if be.Details == nil {
+							be.Details = make([]string, 0)
+						}
+						be.Details = append(be.Details, e)
+					}
+				}
+				bes = append(bes, *be)
+			}
+		}
+	}
+	return bes, err
 }
 
 // Filter filters a list of types using a predicate
@@ -114,13 +179,12 @@ func FilterErrLines(ls *string, derr error) ([]string, error) {
 }
 
 // RunStack runs the stack build command to validate the project
-func RunStack(path string, args []string) (*UnfoldedErrorLines, error) {
-	uerrLines := EmptyUnfoldedErrLines()
+func RunStack(path string, args []string) ([]BuildError, error) {
 	err := changeDir(path)
 	cmd, _, pprstderr := generateStackCommand(err)
 	err1 := cmd.Run()
 	if err1 == nil {
-		return &uerrLines, err
+		return nil, err
 	}
 	var ls *string = nil
 	if pprstderr != nil {
@@ -129,6 +193,7 @@ func RunStack(path string, args []string) (*UnfoldedErrorLines, error) {
 	}
 	filteredErrLines, err := FilterErrLines(ls, err)
 	unsafeUerrlines, err := UnfoldErrLines(filteredErrLines, err)
-	uerrLines = *unsafeUerrlines
-	return &uerrLines, err
+	uerrLines := *unsafeUerrlines
+	buildErrors, err := ParseUnfoldedErrorLines(&uerrLines, err)
+	return buildErrors, err
 }
