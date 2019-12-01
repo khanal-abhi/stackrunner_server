@@ -15,7 +15,7 @@ func main() {
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else {
-			fmt.Println(uerrLines)
+			fmt.Println(uerrLines.List)
 		}
 	}
 }
