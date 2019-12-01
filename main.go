@@ -25,7 +25,7 @@ func main() {
 				}
 
 			} else {
-				fmt.Println("{}")
+				fmt.Println("[]")
 			}
 		}
 	}
