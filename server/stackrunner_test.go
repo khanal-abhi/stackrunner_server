@@ -37,6 +37,53 @@ var filteredErrLines = []string{
 	"2019-12-01 11:52:31.337118: [warn] ",
 }
 
+var unfoldedErrorLines = UnfoldedErrorLines{nil, [][]string{filteredErrLines[1:]}}
+
+var errorLineToParse = "2019-12-01 11:52:31.304038: [warn] /home/abhi/Projects/stack/HSRest/app/Main.hs:6:8: error:"
+
+const errorFile = "/home/abhi/Projects/stack/HSRest/app/Main.hs"
+const errorLine = 6
+const errorColumn = 8
+const errorExtras = ""
+
+func buildErrorTestHelper(be *BuildError, cb func(bool)) {
+
+	fileFail := strings.Compare(be.File, errorFile) != 0
+	lineFail := be.Line != errorLine
+	columnFail := be.Column != errorColumn
+	extrasFail := strings.Compare(be.Extras, errorExtras) != 0
+
+	fail := fileFail || lineFail || columnFail || extrasFail
+	cb(fail)
+}
+
+func TestParseErrorLine(t *testing.T) {
+	be, err := ParseErrorLine(errorLineToParse, nil)
+	if err != nil ||
+		be == nil {
+		t.FailNow()
+	}
+	buildErrorTestHelper(be, func(fail bool) {
+		if fail {
+			t.FailNow()
+		}
+	})
+}
+
+func TestParseUnfoldedErrorLines(t *testing.T) {
+	bes, err := ParseUnfoldedErrorLines(&unfoldedErrorLines, nil)
+	if err != nil || len(bes) == 0 {
+		t.FailNow()
+	} else {
+		be := bes[0]
+		buildErrorTestHelper(&be, func(fail bool) {
+			if fail {
+				t.FailNow()
+			}
+		})
+	}
+}
+
 // TestFilter tests the Filter function
 func TestFilter(t *testing.T) {
 	lst := []string{"apple", "banana", "bagels"}

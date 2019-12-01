@@ -16,11 +16,16 @@ func main() {
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else {
-			bts, err := json.Marshal(buildErrors)
-			if err != nil {
-				fmt.Println(err)
+			if len(buildErrors) > 0 {
+				bts, err := json.Marshal(buildErrors)
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println(string(bts))
+				}
+
 			} else {
-				fmt.Println(string(bts))
+				fmt.Println("{}")
 			}
 		}
 	}
