@@ -6,6 +6,13 @@ Stack Runner Server
 
 <hr>
 
+## Requirements
+There are two main requirements for this extension:
+- [go](https://golang.org/doc/install)
+- [Haskell Stack](https://docs.haskellstack.org/en/stable/README)
+
+<hr>
+
 ## Build instructions
 To build this binary from source, you may follow the following steps:
 ````
