@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"stackrunner_server/server"
 	"strings"
+
+	"github.com/khanal-abhi/stackrunner_server/server"
 )
 
 func main() {
