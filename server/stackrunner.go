@@ -19,16 +19,20 @@ func changeDir(path string) error {
 	return os.Chdir(path)
 }
 
-func generateStackCommand(eerr error) (*exec.Cmd, *Piper, *Piper) {
+func generateStackCommand(eerr error) (*exec.Cmd, *Piper, *Piper, error) {
 	if eerr != nil {
-		return nil, nil, nil
+		return nil, nil, nil, nil
+	}
+	_, err := exec.LookPath("stack")
+	if err != nil {
+		return nil, nil, nil, err
 	}
 	cmd := exec.Command("stack", "build", "--fast", "--verbose")
 	pprstdout := Piper{}
 	pprstderr := Piper{}
 	cmd.Stdout = &pprstdout
 	cmd.Stderr = &pprstderr
-	return cmd, &pprstdout, &pprstderr
+	return cmd, &pprstdout, &pprstderr, err
 }
 
 /**
@@ -200,7 +204,10 @@ func FilterErrLines(ls *string, derr error) ([]string, error) {
 // RunStack runs the stack build command to validate the project
 func RunStack(path string, args []string) ([]BuildError, error) {
 	err := changeDir(path)
-	cmd, _, pprstderr := generateStackCommand(err)
+	cmd, _, pprstderr, err := generateStackCommand(err)
+	if cmd == nil {
+		return nil, err
+	}
 	err1 := cmd.Run()
 	if err1 == nil {
 		return nil, err

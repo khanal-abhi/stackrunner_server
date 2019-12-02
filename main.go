@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"stackrunner_server/server"
+	"strings"
 )
 
 func main() {
@@ -14,7 +15,18 @@ func main() {
 	} else {
 		buildErrors, err := server.RunStack(args[1], args[2:])
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			if strings.Contains(err.Error(), "executable file not found in $PATH") {
+				be := server.BuildError{
+					File:    "",
+					Line:    -1,
+					Column:  -1,
+					Details: nil, Extras: strings.Trim(strings.Replace(err.Error(), "exec:", "", 1), " "),
+				}
+				dt, err := json.Marshal([]server.BuildError{be})
+				if err == nil {
+					fmt.Println(string(dt))
+				}
+			}
 		} else {
 			if len(buildErrors) > 0 {
 				bts, err := json.Marshal(buildErrors)
