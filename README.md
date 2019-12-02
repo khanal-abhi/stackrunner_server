@@ -2,7 +2,7 @@ Stack Runner Server
 ==
 
 ## About
-[Stack Runner Server](https://github.com/khanal-abhi/stackrunner_server) is the backend for the [Stack Runner](https://github.com/khanal-abhi/stack-runner), an extension for vs code that helps with stack builds for Haskell development. This server is required for the extension. Please make sure that the binary for the server is available in `$PATH` as `stackrunner_server`, or configure the settings with the proper path. Since this server is written in `go`, please make sure you have the latest version of `go` installed on your system.
+[Stack Runner Server](https://github.com/khanal-abhi/stackrunner_server) is the backend for the [Stack Runner](https://github.com/khanal-abhi/stack-runner), an extension for vs code that helps with stack builds for Haskell development. Since this server is written in [go](https://golang.org/doc/install), please make sure you have the latest version of [go](https://golang.org/doc/install) installed on your system.
 
 <hr>
 
@@ -34,4 +34,4 @@ $ stackrunner_server <path of stack project>
 <hr>
 
 ## Issues
-For any issues related to the server binary or installation, please report the bug here. For any issues related to the extension, please report the bug at [Stack Runner](https://github.com/khanal-abhi/stack-runner).
+For any issues related to the server binary or installation, please report the bug [here](https://github.com/khanal-abhi/stackrunner_server/issues). For any issues related to the extension, please report the bug [here](https://github.com/khanal-abhi/stack-runner/issues).
