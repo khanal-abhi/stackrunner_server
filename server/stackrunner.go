@@ -60,6 +60,25 @@ type BuildError struct {
 	Extras  string   `json:"extras"`
 }
 
+// ContainsBuildPlanErrors checks to see if the lines contain build plan errors
+func ContainsBuildPlanErrors(lines *string, eerr error) (bool, *string, error) {
+	var serr *string = nil
+	if eerr != nil {
+		return false, serr, eerr
+	}
+	var err error = nil
+	tmp := `Error: While constructing the build plan, the following exceptions were encountered:`
+	match := strings.Contains(*lines, tmp)
+	if match {
+		ss := strings.Split(*lines, tmp)
+		l := len(ss)
+		if l > 1 {
+			serr = &ss[l-1]
+		}
+	}
+	return match, serr, err
+}
+
 // ParseErrorLine parses the error line into the error struct
 func ParseErrorLine(line string, eerr error) (*BuildError, error) {
 	if eerr != nil {
@@ -190,6 +209,11 @@ func RunStack(path string, args []string) ([]BuildError, error) {
 	if pprstderr != nil {
 		d := pprstderr.Data.String()
 		ls = &d
+	}
+	cbp, bpe, err := ContainsBuildPlanErrors(ls, err)
+	if cbp {
+		be := BuildError{path + "/package.yaml", 0, 0, strings.Split(*bpe, "\n"), ""}
+		return []BuildError{be}, err
 	}
 	filteredErrLines, err := FilterErrLines(ls, err)
 	unsafeUerrlines, err := UnfoldErrLines(filteredErrLines, err)

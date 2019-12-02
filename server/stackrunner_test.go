@@ -5,6 +5,23 @@ import (
 	"testing"
 )
 
+var buildPlanErrorLines = `2019-12-02 08:14:08.881154: [debug] Process finished in 24ms: /home/abhi/.stack/programs/x86_64-linux/ghc-tinfo6-8.6.5/bin/ghc-pkg-8.6.5 --user --no-user-package-db --package-db /home/abhi/Projects/stack/HSRest/.stack-work/install/x86_64-linux-tinfo6/8d9a83e26c843fdf600d1c9d454326c9304938424b9ec126ba388061b5342e58/8.6.5/pkgdb dump --expand-pkgroot
+2019-12-02 08:14:08.882044: [debug] Constructing the build plan
+2019-12-02 08:14:08.886901: [error] 
+Error: While constructing the build plan, the following exceptions were encountered:
+
+In the dependencies for HSRest-0.1.0.0:
+    bystring needed, but the stack configuration has no specified version (no
+             package with that name found, perhaps there is a typo in a
+             package's build-depends or an omission from the stack.yaml packages
+             list?)
+needed since HSRest is a build target.
+
+Some different approaches to resolving this:
+
+
+2019-12-02 08:14:08.887601: [error] Plan construction failed.`
+
 var stackRunnerError = `2019-12-01 11:52:30.871603: [info] Preprocessing library for HSRest-0.1.0.0..
 2019-12-01 11:52:30.871683: [info] Building library for HSRest-0.1.0.0..
 2019-12-01 11:52:31.202341: [info] Preprocessing executable 'HSRest-exe' for HSRest-0.1.0.0..
@@ -55,6 +72,17 @@ func buildErrorTestHelper(be *BuildError, cb func(bool)) {
 
 	fail := fileFail || lineFail || columnFail || extrasFail
 	cb(fail)
+}
+
+func TestContainsBuildPlanErrors(t *testing.T) {
+	cbpe, bpe, err := ContainsBuildPlanErrors(&buildPlanErrorLines, nil)
+	if err != nil {
+		t.FailNow()
+	} else if !cbpe {
+		t.FailNow()
+	} else if bpe == nil {
+		t.FailNow()
+	}
 }
 
 func TestParseErrorLine(t *testing.T) {
